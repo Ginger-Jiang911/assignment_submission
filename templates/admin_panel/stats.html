@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}提交统计 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">管理后台</a></li>
+                <li class="breadcrumb-item active">提交统计</li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">📊 提交统计</h2>
+
+        <div class="row g-4 mb-4">
+            {% for stat in project_stats %}
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ stat.project.name }}</h5>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>提交人数</span>
+                                    <strong>{{ stat.submitted_count }} / {{ stat.total_students }}</strong>
+                                </div>
+                                <div class="progress mt-1" style="height: 10px;">
+                                    <div class="progress-bar bg-success" style="width: {{ stat.percentage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ stat.percentage }}%</small>
+                            </div>
+                            {% if stat.project.deadline %}
+                                <p class="mb-1">
+                                    ⏰ 截止：{{ stat.project.deadline|date:"Y-m-d H:i" }}
+                                    {% if stat.is_expired %}
+                                        <span class="badge bg-danger">已截止</span>
+                                    {% else %}
+                                        <span class="badge bg-success">进行中</span>
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                            <p class="mb-0 text-muted">存储后端：{{ stat.project.get_storage_backend_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">暂无项目统计数据</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

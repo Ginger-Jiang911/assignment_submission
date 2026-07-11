@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}系统设置 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">管理后台</a></li>
+                <li class="breadcrumb-item active">系统设置</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">⚙️ 系统设置</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <h5 class="mt-4 mb-3">📦 存储后端配置</h5>
+                    <hr>
+
+                    <h6>WebDAV</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">URL</label>
+                            <input type="text" name="webdav_url" class="form-control" value="{{ settings.webdav_url }}" placeholder="https://example.com/dav/">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">用户名</label>
+                            <input type="text" name="webdav_username" class="form-control" value="{{ settings.webdav_username }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">密码</label>
+                            <input type="password" name="webdav_password" class="form-control" value="{{ settings.webdav_password }}">
+                        </div>
+                    </div>
+
+                    <h6>Amazon S3 / 兼容对象存储</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Endpoint</label>
+                            <input type="text" name="s3_endpoint" class="form-control" value="{{ settings.s3_endpoint }}" placeholder="https://s3.amazonaws.com">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Bucket</label>
+                            <input type="text" name="s3_bucket" class="form-control" value="{{ settings.s3_bucket }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Region</label>
+                            <input type="text" name="s3_region" class="form-control" value="{{ settings.s3_region }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Access Key</label>
+                            <input type="text" name="s3_access_key" class="form-control" value="{{ settings.s3_access_key }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Secret Key</label>
+                            <input type="password" name="s3_secret_key" class="form-control" value="{{ settings.s3_secret_key }}">
+                        </div>
+                    </div>
+
+                    <h6>SMB 共享</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Host</label>
+                            <input type="text" name="smb_host" class="form-control" value="{{ settings.smb_host }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Share</label>
+                            <input type="text" name="smb_share" class="form-control" value="{{ settings.smb_share }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Domain</label>
+                            <input type="text" name="smb_domain" class="form-control" value="{{ settings.smb_domain }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">用户名</label>
+                            <input type="text" name="smb_username" class="form-control" value="{{ settings.smb_username }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">密码</label>
+                            <input type="password" name="smb_password" class="form-control" value="{{ settings.smb_password }}">
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4 mb-3">🔄 备份与清理</h5>
+                    <hr>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="backup_enabled" id="backupEnabled" {% if settings.backup_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="backupEnabled">启用自动备份</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">备份间隔（分钟）</label>
+                            <input type="number" name="backup_interval" class="form-control" value="{{ settings.backup_interval }}" min="5">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="auto_cleanup_enabled" id="autoCleanupEnabled" {% if settings.auto_cleanup_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="autoCleanupEnabled">启用自动清理本地存档</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">清理间隔（备份成功后天数，0=立即清理）</label>
+                            <input type="number" name="cleanup_after_backup" class="form-control" value="{{ settings.cleanup_after_backup }}" min="0">
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">💾 保存设置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">🔗 快速操作</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <a href="{% url 'admin_panel:backup_now' %}" class="btn btn-warning" onclick="return confirm('立即执行备份？')">🔄 立即备份</a>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url 'admin_panel:cleanup_now' %}" class="btn btn-danger" onclick="return confirm('立即清理本地存档？此操作不可撤销！')">🗑️ 立即清理本地存档</a>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url 'admin_panel:check_backup' %}" class="btn btn-info">✅ 检查备份状态</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

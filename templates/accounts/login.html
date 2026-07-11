@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}登录 - 作业提交系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">🔑 登录</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary w-100 mt-3">登录</button>
+                </form>
+                <hr>
+                <p class="text-center mb-0">
+                    还没有账号？ <a href="{% url 'register' %}">立即注册</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto !important;
+}
+
+.card {
+    border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.breadcrumb {
+    background: none;
+    padding: 0;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.btn {
+    border-radius: 8px;
+}
+
+.form-control {
+    border-radius: 8px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+.drop-zone {
+    transition: all 0.3s ease;
+}
+
+.drop-zone.dragover {
+    transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}

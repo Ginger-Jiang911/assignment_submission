@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}管理后台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">🔧 管理后台</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📋 作业项目管理</h5>
+                        <p class="card-text text-muted">创建和管理作业项目、设置重命名规则、存储位置等</p>
+                        <a href="{% url 'admin_panel:project_list' %}" class="btn btn-primary">管理项目</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📂 提交记录管理</h5>
+                        <p class="card-text text-muted">查看所有学生的作业提交记录、下载文件</p>
+                        <a href="{% url 'admin_panel:submission_list' %}" class="btn btn-primary">查看提交</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📦 项目打包下载</h5>
+                        <p class="card-text text-muted">一键导出某个项目下所有作业文件为 ZIP 压缩包</p>
+                        <a href="{% url 'admin_panel:download_project_list' %}" class="btn btn-success">下载项目 ZIP</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">👥 用户管理</h5>
+                        <p class="card-text text-muted">管理学生用户、设置管理员权限</p>
+                        <a href="{% url 'admin_panel:user_list' %}" class="btn btn-primary">管理用户</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">⚙️ 系统设置</h5>
+                        <p class="card-text text-muted">配置存储后端（WebDAV/S3/SMB）、备份策略等</p>
+                        <a href="{% url 'admin_panel:settings' %}" class="btn btn-primary">系统设置</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 统计概览</h5>
+                        <p class="card-text text-muted">查看各项目提交统计、截止情况等</p>
+                        <a href="{% url 'admin_panel:stats' %}" class="btn btn-primary">查看统计</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📤 导出 CSV</h5>
+                        <p class="card-text text-muted">导出提交记录、学生名单等为 CSV</p>
+                        <a href="{% url 'admin_panel:export_csv' %}" class="btn btn-primary">导出 CSV</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

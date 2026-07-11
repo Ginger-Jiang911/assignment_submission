@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - 管理后台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">管理后台</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:project_list' %}">作业项目管理</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">项目名称</label>
+                        <input type="text" name="name" class="form-control" value="{{ form_values.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">标识 (slug)</label>
+                        <input type="text" name="slug" class="form-control" value="{{ form_values.slug }}" required>
+                        <div class="form-text">用于 URL 和文件目录，只能包含字母、数字、中划线和下划线</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea name="description" class="form-control" rows="3">{{ form_values.description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">重命名模板</label>
+                        <input type="text" name="rename_pattern" class="form-control" value="{{ form_values.rename_pattern }}">
+                        <div class="form-text">
+                            可用变量: <code>{student_id}</code> <code>{name}</code> <code>{project}</code> <code>{timestamp}</code> <code>{original_name}</code> <code>{ext}</code>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">存储后端</label>
+                            <select name="storage_backend" class="form-select">
+                                <option value="local" {% if form_values.storage_backend == 'local' %}selected{% endif %}>本地存储</option>
+                                <option value="webdav" {% if form_values.storage_backend == 'webdav' %}selected{% endif %}>WebDAV</option>
+                                <option value="s3" {% if form_values.storage_backend == 's3' %}selected{% endif %}>Amazon S3</option>
+                                <option value="smb" {% if form_values.storage_backend == 'smb' %}selected{% endif %}>SMB 共享</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">最大文件大小 (MB)</label>
+                            <input type="number" name="max_file_size" class="form-control" value="{{ form_values.max_file_size }}" min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">截止时间</label>
+                            <input type="datetime-local" name="deadline" class="form-control" value="{{ form_values.deadline }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">允许的文件类型</label>
+                        <input type="text" name="allowed_extensions" class="form-control" value="{{ form_values.allowed_extensions }}" placeholder="如 .pdf,.docx,.zip，留空允许所有">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if form_values.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">启用</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="auto_rename" id="auto_rename" {% if form_values.auto_rename %}checked{% endif %}>
+                        <label class="form-check-label" for="auto_rename">启用自动重命名</label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">💾 保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

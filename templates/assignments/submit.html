@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}提交作业 - {{ project.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .drop-zone {
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+    .drop-zone.dragover {
+        border-color: #0d6efd;
+        background: #e8f0fe;
+    }
+    .drop-zone.has-file {
+        border-color: #198754;
+        background: #d1e7dd;
+    }
+    .drop-zone-icon {
+        font-size: 3rem;
+        color: #6c757d;
+    }
+    .file-info {
+        display: none;
+    }
+    .file-info.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">首页</a></li>
+                <li class="breadcrumb-item active">{{ project.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ project.name }}</h4>
+            </div>
+            <div class="card-body">
+                {% if project.description %}
+                    <p>{{ project.description }}</p>
+                {% endif %}
+                {% if project.deadline %}
+                    <p class="{% if project.is_expired %}text-danger{% else %}text-muted{% endif %}">
+                        ⏰ 截止时间：{{ project.deadline|date:"Y-m-d H:i" }}
+                    </p>
+                {% endif %}
+                {% if project.allowed_extensions %}
+                    <p class="text-muted">📎 允许的文件类型：{{ project.allowed_extensions }}</p>
+                {% endif %}
+                <p class="text-muted">📦 最大文件大小：{{ project.max_file_size }} MB</p>
+            </div>
+        </div>
+
+        {% if existing_submission %}
+            <div class="alert alert-warning">
+                ⚠️ 您已经提交过该作业，重新提交将覆盖之前的文件。
+            </div>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">当前提交的文件</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>文件名：</strong>{{ existing_submission.renamed_filename|default:existing_submission.original_filename }}</p>
+                    <p><strong>提交时间：</strong>{{ existing_submission.submitted_at|date:"Y-m-d H:i:s" }}</p>
+                    <p><strong>文件大小：</strong>{{ existing_submission.file_size|filesizeformat }}</p>
+                </div>
+                {% if existing_submission.appeal_submitted %}
+                    <div class="card-footer">
+                        <h6>📬 申诉内容</h6>
+                        <p>{{ existing_submission.appeal }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="submissionForm">
+            {% csrf_token %}
+
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📤 选择文件</h5>
+                </div>
+                <div class="card-body">
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-icon">📁</div>
+                        <p class="mb-2">拖拽文件到此处或点击选择文件</p>
+                        <p class="text-muted small mb-3">支持的文件类型：
+                            {% if project.allowed_extensions %}
+                                {{ project.allowed_extensions }}
+                            {% else %}
+                                所有文件
+                            {% endif %}
+                        </p>
+                        <input type="file" name="file" id="fileInput" class="d-none" required>
+                        <button type="button" class="btn btn-outline-primary" id="selectFileBtn">选择文件</button>
+                    </div>
+
+                    <div class="file-info mt-3" id="fileInfo">
+                        <div class="alert alert-success">
+                            <strong>已选择文件：</strong>
+                            <span id="fileName"></span>
+                            <span class="ms-3 text-muted" id="fileSize"></span>
+                            <button type="button" class="btn-close float-end" id="removeFile"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">⚙️ 选项</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="auto_rename" id="autoRename" checked>
+                        <label class="form-check-label" for="autoRename">
+                            ✏️ 自动重命名文件
+                            <small class="text-muted d-block">
+                                {% if project.rename_pattern %}
+                                    格式：{{ project.rename_pattern }}
+                                {% else %}
+                                    格式：学号 姓名.扩展名
+                                {% endif %}
+                            </small>
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="appeal" class="form-label">📬 提交申诉</label>
+                        <textarea class="form-control" name="appeal" id="appeal" rows="3" placeholder="如需对本次提交进行说明或申诉，请在此输入...">{{ existing_submission.appeal|default:"" }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                    📤 提交作业
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFile = document.getElementById('removeFile');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+
+    function updateFileInfo(file) {
+        if (file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = '(' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+            fileInfo.classList.add('show');
+            dropZone.classList.add('has-file');
+        } else {
+            fileInfo.classList.remove('show');
+            dropZone.classList.remove('has-file');
+            fileInput.value = '';
+        }
+    }
+
+    selectFileBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            updateFileInfo(e.target.files[0]);
+        }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            updateFileInfo(e.dataTransfer.files[0]);
+        }
+    });
+
+    removeFile.addEventListener('click', () => {
+        updateFileInfo(null);
+    });
+
+    document.getElementById('submissionForm').addEventListener('submit', function(e) {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('请先选择文件！');
+        }
+    });
+</script>
+{% endblock %}
