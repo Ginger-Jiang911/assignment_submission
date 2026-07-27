@@ -12,7 +12,10 @@
             </ol>
         </nav>
 
-        <h2 class="mb-4">📂 提交记录管理</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">📂 提交记录管理</h2>
+            <a href="{% url 'admin_panel:submission_upload' %}" class="btn btn-primary">代提交作业</a>
+        </div>
 
         <!-- 筛选 -->
         <div class="card shadow-sm mb-4">
@@ -91,6 +94,7 @@
                                 </td>
                                 <td>{{ s.submitted_at|date:"Y-m-d H:i:s" }}</td>
                                 <td>
+                                    <a href="{% url 'admin_panel:submission_upload_for' s.id %}" class="btn btn-sm btn-primary">📤 上传</a>
                                     <a href="{% url 'admin_panel:download_submission' s.id %}" class="btn btn-sm btn-primary">📥 下载</a>
                                 </td>
                             </tr>

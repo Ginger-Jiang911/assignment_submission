@@ -26,6 +26,8 @@ urlpatterns = [
 
     # 提交记录管理
     path("submissions/", views.submission_list_view, name="submission_list"),
+    path("submissions/upload/", views.submission_upload_view, name="submission_upload"),
+    path("submissions/<int:pk>/upload/", views.submission_upload_view, name="submission_upload_for"),
     path("submissions/<int:pk>/download/", views.download_submission_view, name="download_submission"),
 
     # 用户管理（自建 CRUD）

@@ -262,6 +262,82 @@ def submission_list_view(request):
 
 
 @staff_member_required
+def submission_upload_view(request, pk=None):
+    """管理员代学生提交作业"""
+    submission = None
+    if pk:
+        submission = get_object_or_404(Submission.objects.select_related("project", "student"), pk=pk)
+
+    students = User.objects.filter(is_active=True).order_by("student_id")
+    projects = Project.objects.filter(is_active=True).order_by("name")
+
+    if request.method == "POST":
+        student_id = request.POST.get("student_id", "")
+        project_id = request.POST.get("project_id", "")
+        student = get_object_or_404(User, pk=student_id)
+        project = get_object_or_404(Project, pk=project_id, is_active=True)
+        uploaded_file = request.FILES.get("file")
+
+        if not uploaded_file:
+            messages.error(request, "请选择要上传的文件。")
+            return render(request, "admin_panel/submission_upload.html", {
+                "submission": submission, "students": students, "projects": projects,
+                "selected_student": student_id, "selected_project": project_id,
+            })
+
+        if uploaded_file.size > project.max_file_size * 1024 * 1024:
+            messages.error(request, f"文件大小超过限制（{project.max_file_size} MB）。")
+            return render(request, "admin_panel/submission_upload.html", {
+                "submission": submission, "students": students, "projects": projects,
+                "selected_student": student_id, "selected_project": project_id,
+            })
+
+        if project.allowed_extensions:
+            _, ext = os.path.splitext(uploaded_file.name)
+            allowed = [e.strip().lower() for e in project.allowed_extensions.split(",")]
+            if ext.lower() not in allowed:
+                messages.error(request, f"不支持的文件类型，允许的类型：{project.allowed_extensions}")
+                return render(request, "admin_panel/submission_upload.html", {
+                    "submission": submission, "students": students, "projects": projects,
+                    "selected_student": student_id, "selected_project": project_id,
+                })
+
+        auto_rename = request.POST.get("auto_rename") == "on"
+        original_name = uploaded_file.name
+        renamed_name = original_name
+
+        if auto_rename and project.auto_rename:
+            pattern = project.rename_pattern or "{student_id} {name}{ext}"
+            renamed_name = format_rename_pattern(pattern, student, project, original_name)
+
+        Submission.objects.update_or_create(
+            project=project,
+            student=student,
+            defaults={
+                "file": uploaded_file,
+                "original_filename": original_name,
+                "renamed_filename": renamed_name,
+                "file_size": uploaded_file.size,
+                "auto_renamed": auto_rename,
+            },
+        )
+
+        messages.success(request, f"已代 {student.name}({student.student_id}) 提交「{project.name}」的作业。")
+        return redirect("admin_panel:submission_list")
+
+    selected_student = str(submission.student_id) if submission else ""
+    selected_project = str(submission.project_id) if submission else ""
+
+    return render(request, "admin_panel/submission_upload.html", {
+        "submission": submission,
+        "students": students,
+        "projects": projects,
+        "selected_student": selected_student,
+        "selected_project": selected_project,
+    })
+
+
+@staff_member_required
 def download_submission_view(request, pk):
     """下载提交文件，以重命名后的文件名提供给浏览器"""
     submission = get_object_or_404(Submission.objects.select_related("project", "student"), pk=pk)
