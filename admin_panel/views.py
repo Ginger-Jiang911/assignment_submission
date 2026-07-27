@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count, Q
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -97,41 +97,6 @@ def export_csv_view(request):
             "是" if s.appeal_submitted else "否",
             s.submitted_at.strftime("%Y-%m-%d %H:%M:%S"),
         ])
-    return response
-
-
-# ==================== 项目 ZIP 下载 ====================
-
-@staff_member_required
-def download_project_list_view(request):
-    projects = Project.objects.annotate(submission_count=Count("submissions"))
-    return render(request, "admin_panel/download_project_list.html", {"projects": projects})
-
-
-@staff_member_required
-def download_project_zip_view(request, slug):
-    project = get_object_or_404(Project, slug=slug)
-    submissions = Submission.objects.filter(project=project).select_related("student")
-
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for sub in submissions:
-            if sub.file and os.path.exists(sub.file.path):
-                if project.rename_pattern:
-                    zip_name = format_rename_pattern(
-                        project.rename_pattern, sub.student, project, sub.original_filename)
-                else:
-                    _, ext = os.path.splitext(sub.original_filename)
-                    zip_name = f"{sub.student.student_id}_{sub.student.name}{ext}"
-                zf.write(sub.file.path, zip_name)
-            elif sub.file:
-                zip_name = f"{sub.student.student_id}_{sub.student.name}_FILE_MISSING.txt"
-                zf.writestr(zip_name,
-                    f"文件丢失: {sub.original_filename}\n提交时间: {sub.submitted_at}")
-
-    zip_buffer.seek(0)
-    response = HttpResponse(zip_buffer.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = f'attachment; filename="{project.slug}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.zip"'
     return response
 
 

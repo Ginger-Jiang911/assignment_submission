@@ -14,10 +14,6 @@ urlpatterns = [
     path("stats/", views.stats_view, name="stats"),
     path("export/csv/", views.export_csv_view, name="export_csv"),
 
-    # 项目 ZIP 下载
-    path("download/", views.download_project_list_view, name="download_project_list"),
-    path("download/<slug:slug>/", views.download_project_zip_view, name="download_project_zip"),
-
     # 项目管理（自建 CRUD）
     path("projects/", views.project_list_view, name="project_list"),
     path("projects/create/", views.project_create_view, name="project_create"),
