@@ -333,6 +333,43 @@ def download_submission_view(request, pk):
     return response
 
 
+@staff_member_required
+def submission_batch_download_view(request):
+    """批量下载所选提交文件为 ZIP"""
+    if request.method != "POST":
+        messages.error(request, "无效的请求方式。")
+        return redirect("admin_panel:submission_list")
+
+    ids_str = request.POST.get("ids", "")
+    if not ids_str:
+        messages.error(request, "请先选择要下载的提交记录。")
+        return redirect("admin_panel:submission_list")
+
+    ids = [int(x) for x in ids_str.split(",") if x.strip()]
+    if not ids:
+        messages.error(request, "请先选择要下载的提交记录。")
+        return redirect("admin_panel:submission_list")
+
+    submissions = Submission.objects.filter(pk__in=ids).select_related("project", "student")
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for sub in submissions:
+            if sub.file and os.path.exists(sub.file.path):
+                zip_name = sub.renamed_filename or sub.original_filename
+                # 如果同一个文件名出现多次，添加学号前缀避免冲突
+                existing_names = [info.filename for info in zf.filelist]
+                if zip_name in existing_names:
+                    base, ext = os.path.splitext(zip_name)
+                    zip_name = f"{sub.student.student_id}_{base}{ext}"
+                zf.write(sub.file.path, zip_name)
+
+    zip_buffer.seek(0)
+    response = HttpResponse(zip_buffer.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="submissions_batch_{timezone.now().strftime("%Y%m%d_%H%M%S")}.zip"'
+    return response
+
+
 # ==================== 用户管理（自建 CRUD） ====================
 
 @staff_member_required
