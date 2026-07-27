@@ -262,45 +262,29 @@ def submission_list_view(request):
 
 
 @staff_member_required
-def submission_upload_view(request, pk=None):
+def submission_upload_view(request, pk):
     """管理员代学生提交作业"""
-    submission = None
-    if pk:
-        submission = get_object_or_404(Submission.objects.select_related("project", "student"), pk=pk)
-
-    students = User.objects.filter(is_active=True).order_by("student_id")
-    projects = Project.objects.filter(is_active=True).order_by("name")
+    submission = get_object_or_404(Submission.objects.select_related("project", "student"), pk=pk)
+    student = submission.student
+    project = submission.project
 
     if request.method == "POST":
-        student_id = request.POST.get("student_id", "")
-        project_id = request.POST.get("project_id", "")
-        student = get_object_or_404(User, pk=student_id)
-        project = get_object_or_404(Project, pk=project_id, is_active=True)
         uploaded_file = request.FILES.get("file")
 
         if not uploaded_file:
             messages.error(request, "请选择要上传的文件。")
-            return render(request, "admin_panel/submission_upload.html", {
-                "submission": submission, "students": students, "projects": projects,
-                "selected_student": student_id, "selected_project": project_id,
-            })
+            return render(request, "admin_panel/submission_upload.html", {"submission": submission})
 
         if uploaded_file.size > project.max_file_size * 1024 * 1024:
             messages.error(request, f"文件大小超过限制（{project.max_file_size} MB）。")
-            return render(request, "admin_panel/submission_upload.html", {
-                "submission": submission, "students": students, "projects": projects,
-                "selected_student": student_id, "selected_project": project_id,
-            })
+            return render(request, "admin_panel/submission_upload.html", {"submission": submission})
 
         if project.allowed_extensions:
             _, ext = os.path.splitext(uploaded_file.name)
             allowed = [e.strip().lower() for e in project.allowed_extensions.split(",")]
             if ext.lower() not in allowed:
                 messages.error(request, f"不支持的文件类型，允许的类型：{project.allowed_extensions}")
-                return render(request, "admin_panel/submission_upload.html", {
-                    "submission": submission, "students": students, "projects": projects,
-                    "selected_student": student_id, "selected_project": project_id,
-                })
+                return render(request, "admin_panel/submission_upload.html", {"submission": submission})
 
         auto_rename = request.POST.get("auto_rename") == "on"
         original_name = uploaded_file.name
@@ -325,16 +309,7 @@ def submission_upload_view(request, pk=None):
         messages.success(request, f"已代 {student.name}({student.student_id}) 提交「{project.name}」的作业。")
         return redirect("admin_panel:submission_list")
 
-    selected_student = str(submission.student_id) if submission else ""
-    selected_project = str(submission.project_id) if submission else ""
-
-    return render(request, "admin_panel/submission_upload.html", {
-        "submission": submission,
-        "students": students,
-        "projects": projects,
-        "selected_student": selected_student,
-        "selected_project": selected_project,
-    })
+    return render(request, "admin_panel/submission_upload.html", {"submission": submission})
 
 
 @staff_member_required
